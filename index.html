@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>zLoc — real-time indoor positioning</title>
+<meta name="description" content="zLoc tracks people, robots and goods indoors in real time, and hands the positions to your own software over MQTT, WebSocket or REST.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/barlow-sc-700.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Barlow"; font-weight: 400; font-display: swap; src: url(fonts/barlow-400.woff2) format("woff2"); }
+@font-face { font-family: "Barlow"; font-weight: 600; font-display: swap; src: url(fonts/barlow-600.woff2) format("woff2"); }
+@font-face { font-family: "Barlow Semi Condensed"; font-weight: 600; font-display: swap; src: url(fonts/barlow-sc-600.woff2) format("woff2"); }
+@font-face { font-family: "Barlow Semi Condensed"; font-weight: 700; font-display: swap; src: url(fonts/barlow-sc-700.woff2) format("woff2"); }
+:root {
+  --page: #F3F5F2; --floor: #DCE6DE; --line: #FFFFFF; --grid: rgba(23, 48, 44, 0.08);
+  --ink: #17302C; --muted: #56695F; --rule: #CFD9D2; --panel: #FAFBF9; --code-bg: #E7EDE8;
+  --bib: #F2C230; --bib-edge: #6B5210; --focus: #2F5BEA;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0F1917; --floor: #1C2B28; --line: #3F5A53; --grid: rgba(227, 236, 232, 0.07);
+    --ink: #E3ECE8; --muted: #93A8A1; --rule: #2A3C38; --panel: #152320; --code-bg: #1A2926;
+    --bib-edge: #F7DC86; --focus: #8BA7FF;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0F1917; --floor: #1C2B28; --line: #3F5A53; --grid: rgba(227, 236, 232, 0.07);
+  --ink: #E3ECE8; --muted: #93A8A1; --rule: #2A3C38; --panel: #152320; --code-bg: #1A2926;
+  --bib-edge: #F7DC86; --focus: #8BA7FF;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 400 17px/1.55 Barlow, "Segoe UI", system-ui, -apple-system, sans-serif; padding: 0 16px; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+.cond { font-family: "Barlow Semi Condensed", "Arial Narrow", Barlow, system-ui, sans-serif; }
+a { color: var(--ink); }
+a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+header.top { display: flex; justify-content: space-between; align-items: baseline; padding-block: 22px 0; gap: 16px; }
+.logo { font: 700 26px/1 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; letter-spacing: 0.01em; text-decoration: none; }
+.logo span { color: var(--muted); }
+header.top a.mail { font-size: 16px; color: var(--muted); text-decoration: none; }
+header.top a.mail:hover { color: var(--ink); }
+
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 40px; align-items: center; padding-block: 56px 64px; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 28px; padding-block: 36px 44px; } }
+h1 { margin: 0 0 18px; font: 700 clamp(38px, 5.4vw, 60px)/1.02 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  letter-spacing: -0.005em; text-wrap: balance; }
+.lede { margin: 0 0 26px; font-size: 19px; color: var(--muted); max-width: 46ch; }
+.cta { display: inline-flex; align-items: center; gap: 10px; background: var(--ink); color: var(--page); text-decoration: none;
+  font: 600 17px/1 Barlow, system-ui, sans-serif; padding: 14px 20px; border-radius: 6px; }
+.cta:hover { opacity: 0.92; }
+.court { background: var(--floor); border-radius: 8px; overflow: hidden; }
+.court canvas { display: block; width: 100%; height: auto; }
+.readout { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 10px 14px;
+  font: 500 14px/1.3 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+section { border-top: 1px solid var(--rule); padding-block: 48px; }
+h2 { margin: 0 0 22px; font: 600 30px/1.15 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; text-wrap: balance; }
+h3 { margin: 0 0 6px; font: 600 20px/1.25 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 36px; }
+.grid p { margin: 0; color: var(--muted); max-width: 42ch; }
+.uses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.use { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px; }
+.use p { margin: 0; color: var(--muted); }
+.use .k { display: block; margin-bottom: 10px; font: 600 13px/1 Barlow, system-ui, sans-serif; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); }
+.api { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .api { grid-template-columns: 1fr; } }
+.api ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.api li b { display: block; font: 600 18px/1.3 "Barlow Semi Condensed", system-ui, sans-serif; }
+.api li span { color: var(--muted); }
+pre { margin: 0; padding: 18px 20px; background: var(--code-bg); border-radius: 8px; overflow-x: auto;
+  font: 400 13.5px/1.6 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; color: var(--ink); }
+pre .c { color: var(--muted); }
+.contact { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; }
+.contact p { margin: 0; color: var(--muted); max-width: 52ch; }
+footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var(--muted); font-size: 14px;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/" aria-label="zLoc home"><span>z</span>Loc</a>
+    <a class="mail" href="mailto:contact@zloc.net">contact@zloc.net</a>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Know where everything is, as it moves.</h1>
+        <p class="lede">zLoc tracks people, robots and goods indoors in real time. Anchors on the walls, a small tag on
+          whatever moves, and one box on your network that hands every position to your own software.</p>
+        <a class="cta" href="mailto:contact@zloc.net?subject=zLoc">Talk to us</a>
+      </div>
+      <figure class="court" style="margin:0">
+        <canvas id="floor" width="660" height="440" role="img" aria-label="A room seen from above: six anchors on the walls and one tag moving across the floor, leaving a short trail"></canvas>
+        <figcaption class="readout"><span id="xy">x 0.00 m · y 0.00 m</span><span>tag 1 · 5 positions a second</span></figcaption>
+      </figure>
+    </div>
+
+    <section aria-labelledby="get-h">
+      <h2 id="get-h">What you get</h2>
+      <div class="grid">
+        <div><h3>Live positions</h3><p>Every tag's position, speed and whether it is standing still, five times a second — up to twenty where things move fast.</p></div>
+        <div><h3>Events and alarms</h3><p>Zone entries and exits, an alarm when someone steps into a restricted area, jumps for sport.</p></div>
+        <div><h3>Session reports</h3><p>Distance, speeds, jumps and time in each zone per person, built from the tag's own recording so nothing lost on the radio is missing.</p></div>
+        <div><h3>Your data, on your network</h3><p>The positions are computed and served in the room. Nothing has to leave your site.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="for-h">
+      <h2 id="for-h">Built for</h2>
+      <div class="uses">
+        <div class="use"><span class="k">Sports</span><h3>Players on the court</h3><p>Distance, sprints, jumps and time on court, live on the bench and in a report after training.</p></div>
+        <div class="use"><span class="k">Robots</span><h3>Machines that need to know where they are</h3><p>Fast, steady position updates with speed, and geofences a robot must not cross.</p></div>
+        <div class="use"><span class="k">Warehouses</span><h3>Goods and people on the floor</h3><p>Where each pallet is, who is in which area, and an alarm when someone enters a machine zone.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="api-h">
+      <h2 id="api-h">Your software, three ways in</h2>
+      <div class="api">
+        <ul>
+          <li><b>MQTT</b><span>For backends that already speak it, or several services reading the same stream.</span></li>
+          <li><b>WebSocket</b><span>JSON straight into a browser page or a light client.</span></li>
+          <li><b>REST</b><span>The room, its zones, the latest state, sessions and their reports.</span></li>
+        </ul>
+        <pre aria-label="An example location message"><span class="c">// zloc/v1/my-site/tag/7a90000000000001/location</span>
+{
+  "id": "7a90000000000001",
+  "ts": 1790543510.386,
+  "pos": { "x": 4.18, "y": 2.03, "z": 1.20 },
+  "speed": 1.4,
+  "still": false
+}</pre>
+      </div>
+    </section>
+
+    <section aria-labelledby="c-h">
+      <div class="contact">
+        <div><h2 id="c-h" style="margin-bottom:8px">We are preparing our first installations.</h2>
+          <p>If you have a hall, a warehouse or a robot fleet where knowing positions would help, write to us.</p></div>
+        <a class="cta" href="mailto:contact@zloc.net?subject=zLoc">contact@zloc.net</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 zLoc</span>
+    <span>This site sets no cookies and uses no trackers. Security reports: <a href="mailto:security@zloc.net">security@zloc.net</a></span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  // A 10.5 × 6.5 m room from above, six anchors on its walls, one tag walking a loop. Drawing only — no data.
+  const W = 10.5, H = 6.5, ANCHORS = [[0.3, 0.3], [5.25, 0.2], [10.2, 0.3], [10.2, 6.2], [5.25, 6.3], [0.3, 6.2]];
+  const cv = document.getElementById("floor"), ctx = cv.getContext("2d"), xy = document.getElementById("xy");
+  const still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const path = (t) => [5.25 + 3.6 * Math.sin(t) + 0.5 * Math.sin(3.1 * t), 3.25 + 2.1 * Math.sin(2 * t + 0.6) * Math.cos(0.35 * t)];
+  function size() {
+    const dpr = window.devicePixelRatio || 1, w = cv.clientWidth;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(w * (H + 1) / (W + 1) * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function draw(t) {
+    const w = cv.clientWidth, h = cv.height / (window.devicePixelRatio || 1), s = Math.min(w / (W + 1), h / (H + 1));
+    const ox = (w - W * s) / 2, oy = (h + H * s) / 2, X = (x) => ox + x * s, Y = (y) => oy - y * s;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = 1; x < W; x++) { ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x), Y(H)); }
+    for (let y = 1; y < H; y++) { ctx.moveTo(X(0), Y(y)); ctx.lineTo(X(W), Y(y)); }
+    ctx.stroke();
+    ctx.strokeStyle = css("--line"); ctx.lineWidth = 3; ctx.strokeRect(X(0), Y(H), W * s, H * s);
+    ctx.beginPath(); ctx.moveTo(X(W / 2), Y(0)); ctx.lineTo(X(W / 2), Y(H)); ctx.stroke();
+    ctx.fillStyle = css("--ink");
+    for (const [ax, ay] of ANCHORS) { ctx.fillRect(X(ax) - 4.5, Y(ay) - 4.5, 9, 9); }
+    const N = 60, dt = 0.012;                                         // the last ~2.4 s as a fading trail
+    ctx.lineCap = "round";
+    for (let i = N; i > 0; i--) {
+      const [x0, y0] = path(t - i * dt), [x1, y1] = path(t - (i - 1) * dt), a = 1 - i / N;
+      ctx.strokeStyle = "rgba(242, 194, 48, " + (0.12 + 0.8 * a).toFixed(3) + ")"; ctx.lineWidth = 1.5 + 4 * a;
+      ctx.beginPath(); ctx.moveTo(X(x0), Y(y0)); ctx.lineTo(X(x1), Y(y1)); ctx.stroke();
+    }
+    const [x, y] = path(t);
+    ctx.fillStyle = css("--bib"); ctx.strokeStyle = css("--bib-edge"); ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(X(x), Y(y), 8, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    return [x, y];
+  }
+  let t = 2.2, last = 0;
+  function tick(now) {
+    const p = draw(t + 0.012 * (now - last) / 16.7);
+    if (now - last >= 200) {                                        // the readout updates 5 times a second, like a tag
+      t += 0.012 * (now - last) / 16.7; last = now;
+      xy.textContent = "x " + p[0].toFixed(2) + " m · y " + p[1].toFixed(2) + " m";
+    }
+    requestAnimationFrame(tick);
+  }
+  size(); window.addEventListener("resize", () => { size(); if (still) draw(t); });
+  if (still) { const p = draw(t); xy.textContent = "x " + p[0].toFixed(2) + " m · y " + p[1].toFixed(2) + " m"; }
+  else requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
