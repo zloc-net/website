@@ -5,75 +5,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>zLoc — real-time indoor positioning</title>
 <meta name="description" content="zLoc tracks people, robots and goods indoors in real time, and hands the positions to your own software over MQTT, WebSocket or REST.">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preload" href="fonts/barlow-sc-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/zloc-icon-tile.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/zloc-icon-180.png">
+<meta name="theme-color" content="#0F1216">
+<link rel="preload" href="fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-@font-face { font-family: "Barlow"; font-weight: 400; font-display: swap; src: url(fonts/barlow-400.woff2) format("woff2"); }
-@font-face { font-family: "Barlow"; font-weight: 600; font-display: swap; src: url(fonts/barlow-600.woff2) format("woff2"); }
-@font-face { font-family: "Barlow Semi Condensed"; font-weight: 600; font-display: swap; src: url(fonts/barlow-sc-600.woff2) format("woff2"); }
-@font-face { font-family: "Barlow Semi Condensed"; font-weight: 700; font-display: swap; src: url(fonts/barlow-sc-700.woff2) format("woff2"); }
+/* zloc identity v1.0 "Ink & Acid" (product/brand/zloc-identity-v1): acid is the fix only — never text, never behind text */
+@font-face { font-family: "Space Grotesk"; font-weight: 300 700; font-display: swap; src: url(fonts/space-grotesk.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url(fonts/ibm-plex-mono-400.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-display: swap; src: url(fonts/ibm-plex-mono-500.woff2) format("woff2"); }
 :root {
-  --page: #F3F5F2; --floor: #DCE6DE; --line: #FFFFFF; --grid: rgba(23, 48, 44, 0.08);
-  --ink: #17302C; --muted: #56695F; --rule: #CFD9D2; --panel: #FAFBF9; --code-bg: #E7EDE8;
-  --bib: #F2C230; --bib-edge: #6B5210; --focus: #2F5BEA;
+  --page: #F4F1EA; --ink: #0F1216; --muted: #4F5B66; --rule: #DDD8CC; --panel: #F9F7F2; --code-bg: #EAE6DC;
+  --floor: #EAE6DC; --grid: rgba(15, 18, 22, 0.07); --wall: #0F1216; --trail: 15, 18, 22; --acid: #D4FF3F;
+  --dot-edge: #0F1216; --focus: #2F5BEA;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --page: #0F1917; --floor: #1C2B28; --line: #3F5A53; --grid: rgba(227, 236, 232, 0.07);
-    --ink: #E3ECE8; --muted: #93A8A1; --rule: #2A3C38; --panel: #152320; --code-bg: #1A2926;
-    --bib-edge: #F7DC86; --focus: #8BA7FF;
+    --page: #0F1216; --ink: #F4F1EA; --muted: #A3ADB6; --rule: #262B31; --panel: #151920; --code-bg: #1A1F26;
+    --floor: #151920; --grid: rgba(244, 241, 234, 0.07); --wall: #F4F1EA; --trail: 244, 241, 234; --dot-edge: #0F1216;
+    --focus: #8BA7FF;
   }
 }
 :root[data-theme="dark"] {
-  --page: #0F1917; --floor: #1C2B28; --line: #3F5A53; --grid: rgba(227, 236, 232, 0.07);
-  --ink: #E3ECE8; --muted: #93A8A1; --rule: #2A3C38; --panel: #152320; --code-bg: #1A2926;
-  --bib-edge: #F7DC86; --focus: #8BA7FF;
+  --page: #0F1216; --ink: #F4F1EA; --muted: #A3ADB6; --rule: #262B31; --panel: #151920; --code-bg: #1A1F26;
+  --floor: #151920; --grid: rgba(244, 241, 234, 0.07); --wall: #F4F1EA; --trail: 244, 241, 234; --dot-edge: #0F1216;
+  --focus: #8BA7FF;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--page); color: var(--ink);
-  font: 400 17px/1.55 Barlow, "Segoe UI", system-ui, -apple-system, sans-serif; padding: 0 16px; }
+  font: 400 17px/1.6 "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif; padding: 0 16px; }
 .wrap { max-width: 1120px; margin: 0 auto; }
-.cond { font-family: "Barlow Semi Condensed", "Arial Narrow", Barlow, system-ui, sans-serif; }
 a { color: var(--ink); }
 a:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 
-header.top { display: flex; justify-content: space-between; align-items: baseline; padding-block: 22px 0; gap: 16px; }
-.logo { font: 700 26px/1 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; letter-spacing: 0.01em; text-decoration: none; }
-.logo span { color: var(--muted); }
+header.top { display: flex; justify-content: space-between; align-items: center; padding-block: 24px 0; gap: 16px; }
+.logo { display: block; line-height: 0; }
+.logo img { height: 34px; width: auto; }
+.logo .rev { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo .pos { display: none; } :root:not([data-theme="light"]) .logo .rev { display: block; } }
+:root[data-theme="dark"] .logo .pos { display: none; } :root[data-theme="dark"] .logo .rev { display: block; }
 header.top a.mail { font-size: 16px; color: var(--muted); text-decoration: none; }
 header.top a.mail:hover { color: var(--ink); }
 
-.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 40px; align-items: center; padding-block: 56px 64px; }
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 44px; align-items: center; padding-block: 60px 68px; }
 @media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 28px; padding-block: 36px 44px; } }
-h1 { margin: 0 0 18px; font: 700 clamp(38px, 5.4vw, 60px)/1.02 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
-  letter-spacing: -0.005em; text-wrap: balance; }
-.lede { margin: 0 0 26px; font-size: 19px; color: var(--muted); max-width: 46ch; }
+h1 { margin: 0 0 20px; font: 700 clamp(36px, 5vw, 56px)/1.04 "Space Grotesk", system-ui, sans-serif; letter-spacing: -0.03em; text-wrap: balance; }
+.lede { margin: 0 0 28px; font-size: 19px; color: var(--muted); max-width: 46ch; }
 .cta { display: inline-flex; align-items: center; gap: 10px; background: var(--ink); color: var(--page); text-decoration: none;
-  font: 600 17px/1 Barlow, system-ui, sans-serif; padding: 14px 20px; border-radius: 6px; }
-.cta:hover { opacity: 0.92; }
-.court { background: var(--floor); border-radius: 8px; overflow: hidden; }
+  font: 500 17px/1 "Space Grotesk", system-ui, sans-serif; padding: 14px 20px; border-radius: 6px; }
+.cta:hover { opacity: 0.9; }
+.court { background: var(--floor); border-radius: 8px; overflow: hidden; margin: 0; }
 .court canvas { display: block; width: 100%; height: auto; }
 .readout { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 10px 14px;
-  font: 500 14px/1.3 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+  font: 400 13.5px/1.3 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-section { border-top: 1px solid var(--rule); padding-block: 48px; }
-h2 { margin: 0 0 22px; font: 600 30px/1.15 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; text-wrap: balance; }
-h3 { margin: 0 0 6px; font: 600 20px/1.25 "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif; }
+section { border-top: 1px solid var(--rule); padding-block: 52px; }
+h2 { margin: 0 0 24px; font: 700 30px/1.15 "Space Grotesk", system-ui, sans-serif; letter-spacing: -0.02em; text-wrap: balance; }
+h3 { margin: 0 0 6px; font: 500 19px/1.3 "Space Grotesk", system-ui, sans-serif; letter-spacing: -0.01em; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 36px; }
 .grid p { margin: 0; color: var(--muted); max-width: 42ch; }
 .uses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .use { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 20px 22px; }
 .use p { margin: 0; color: var(--muted); }
-.use .k { display: block; margin-bottom: 10px; font: 600 13px/1 Barlow, system-ui, sans-serif; letter-spacing: 0.08em;
+.use .k { display: block; margin-bottom: 10px; font: 500 12.5px/1 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--muted); }
 .api { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: 32px; align-items: start; }
 @media (max-width: 860px) { .api { grid-template-columns: 1fr; } }
 .api ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
-.api li b { display: block; font: 600 18px/1.3 "Barlow Semi Condensed", system-ui, sans-serif; }
+.api li b { display: block; font: 500 18px/1.3 "Space Grotesk", system-ui, sans-serif; }
 .api li span { color: var(--muted); }
 pre { margin: 0; padding: 18px 20px; background: var(--code-bg); border-radius: 8px; overflow-x: auto;
-  font: 400 13.5px/1.6 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; color: var(--ink); }
+  font: 400 13.5px/1.6 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; color: var(--ink); }
 pre .c { color: var(--muted); }
 .contact { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; }
 .contact p { margin: 0; color: var(--muted); max-width: 52ch; }
@@ -85,7 +89,7 @@ footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var
 <body>
 <div class="wrap">
   <header class="top">
-    <a class="logo" href="/" aria-label="zLoc home"><span>z</span>Loc</a>
+    <a class="logo" href="/" aria-label="zloc home"><img class="pos" src="zloc-lockup-horizontal.svg" alt="zloc" width="114" height="34"><img class="rev" src="zloc-lockup-horizontal-reversed.svg" alt="zloc" width="114" height="34"></a>
     <a class="mail" href="mailto:contact@zloc.net">contact@zloc.net</a>
   </header>
 
@@ -177,20 +181,20 @@ footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var
     for (let x = 1; x < W; x++) { ctx.moveTo(X(x), Y(0)); ctx.lineTo(X(x), Y(H)); }
     for (let y = 1; y < H; y++) { ctx.moveTo(X(0), Y(y)); ctx.lineTo(X(W), Y(y)); }
     ctx.stroke();
-    ctx.strokeStyle = css("--line"); ctx.lineWidth = 3; ctx.strokeRect(X(0), Y(H), W * s, H * s);
+    ctx.strokeStyle = css("--wall"); ctx.lineWidth = 2; ctx.strokeRect(X(0), Y(H), W * s, H * s);
     ctx.beginPath(); ctx.moveTo(X(W / 2), Y(0)); ctx.lineTo(X(W / 2), Y(H)); ctx.stroke();
-    ctx.fillStyle = css("--ink");
+    ctx.fillStyle = css("--wall");
     for (const [ax, ay] of ANCHORS) { ctx.fillRect(X(ax) - 4.5, Y(ay) - 4.5, 9, 9); }
     const N = 60, dt = 0.012;                                         // the last ~2.4 s as a fading trail
     ctx.lineCap = "round";
     for (let i = N; i > 0; i--) {
       const [x0, y0] = path(t - i * dt), [x1, y1] = path(t - (i - 1) * dt), a = 1 - i / N;
-      ctx.strokeStyle = "rgba(242, 194, 48, " + (0.12 + 0.8 * a).toFixed(3) + ")"; ctx.lineWidth = 1.5 + 4 * a;
+      ctx.strokeStyle = "rgba(" + css("--trail") + ", " + (0.05 + 0.45 * a).toFixed(3) + ")"; ctx.lineWidth = 1 + 3 * a;
       ctx.beginPath(); ctx.moveTo(X(x0), Y(y0)); ctx.lineTo(X(x1), Y(y1)); ctx.stroke();
     }
     const [x, y] = path(t);
-    ctx.fillStyle = css("--bib"); ctx.strokeStyle = css("--bib-edge"); ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(X(x), Y(y), 8, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = css("--acid"); ctx.strokeStyle = css("--dot-edge"); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(X(x), Y(y), 9, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
     return [x, y];
   }
   let t = 2.2, last = 0;
