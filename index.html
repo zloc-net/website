@@ -3,8 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>zLoc — real-time indoor positioning</title>
-<meta name="description" content="zLoc tracks people, robots and goods indoors in real time, and hands the positions to your own software over MQTT, WebSocket or REST.">
+<title>zLoc — UWB real-time location system for indoor tracking</title>
+<meta name="description" content="zLoc is a real-time location system (RTLS) using ultra-wideband (UWB): indoor positioning and tracking for sports halls, warehouses and robots, running on your own network.">
+<link rel="canonical" href="https://zloc.net/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://zloc.net/">
+<meta property="og:title" content="zLoc — real-time location system for indoor tracking">
+<meta property="og:description" content="Know where everything is, as it moves: people, robots and goods indoors, in real time, on your own network.">
+<meta property="og:image" content="https://zloc.net/zloc-icon-512.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "Organization", "name": "zLoc", "url": "https://zloc.net/",
+ "logo": "https://zloc.net/zloc-icon-512.png", "email": "contact@zloc.net",
+ "description": "Real-time location system (RTLS) with ultra-wideband (UWB) indoor positioning for sports, warehouses and robots."}
+</script>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/zloc-icon-tile.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/zloc-icon-180.png">
@@ -71,6 +83,7 @@ h3 { margin: 0 0 6px; font: 500 19px/1.3 "Space Grotesk", system-ui, sans-serif;
 .use p { margin: 0; color: var(--muted); }
 .use .k { display: block; margin-bottom: 10px; font: 500 12.5px/1 "IBM Plex Mono", ui-monospace, monospace; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--muted); }
+.plain { margin: 0; color: var(--muted); max-width: 70ch; font-size: 18px; }
 .api { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: 32px; align-items: start; }
 @media (max-width: 860px) { .api { grid-template-columns: 1fr; } }
 .api ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
@@ -97,8 +110,8 @@ footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var
     <div class="hero">
       <div>
         <h1>Know where everything is, as it moves.</h1>
-        <p class="lede">zLoc tracks people, robots and goods indoors in real time. Anchors on the walls, a small tag on
-          whatever moves, and one box on your network that hands every position to your own software.</p>
+        <p class="lede">zLoc is a real-time location system for indoor spaces. Anchors on the walls, a small ultra-wideband
+          (UWB) tag on whatever moves, and one box on your network that hands every position to your own software.</p>
         <a class="cta" href="mailto:contact@zloc.net?subject=zLoc">Talk to us</a>
       </div>
       <figure class="court" style="margin:0">
@@ -111,7 +124,7 @@ footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var
       <h2 id="get-h">What you get</h2>
       <div class="grid">
         <div><h3>Live positions</h3><p>Every tag's position, speed and whether it is standing still, five times a second — up to twenty where things move fast.</p></div>
-        <div><h3>Events and alarms</h3><p>Zone entries and exits, an alarm when someone steps into a restricted area, jumps for sport.</p></div>
+        <div><h3>Zones and alarms</h3><p>Geofencing built in: zone entries and exits, and an alarm when someone steps into a restricted area.</p></div>
         <div><h3>Session reports</h3><p>Distance, speeds, jumps and time in each zone per person, built from the tag's own recording so nothing lost on the radio is missing.</p></div>
         <div><h3>Your data, on your network</h3><p>The positions are computed and served in the room. Nothing has to leave your site.</p></div>
       </div>
@@ -120,29 +133,17 @@ footer { border-top: 1px solid var(--rule); padding-block: 22px 32px; color: var
     <section aria-labelledby="for-h">
       <h2 id="for-h">Built for</h2>
       <div class="uses">
-        <div class="use"><span class="k">Sports</span><h3>Players on the court</h3><p>Distance, sprints, jumps and time on court, live on the bench and in a report after training.</p></div>
-        <div class="use"><span class="k">Robots</span><h3>Machines that need to know where they are</h3><p>Fast, steady position updates with speed, and geofences a robot must not cross.</p></div>
-        <div class="use"><span class="k">Warehouses</span><h3>Goods and people on the floor</h3><p>Where each pallet is, who is in which area, and an alarm when someone enters a machine zone.</p></div>
+        <div class="use"><span class="k">Sports</span><h3>Player tracking indoors</h3><p>Distance, sprints, jumps and time on court for every player, live on the bench and in a report after training.</p></div>
+        <div class="use"><span class="k">Robots</span><h3>Localization for robots and AMRs</h3><p>Fast, steady position updates with speed, and geofences a robot must not cross.</p></div>
+        <div class="use"><span class="k">Warehouses</span><h3>Asset tracking and safety</h3><p>Where each pallet is, who is in which area, and an alarm when someone walks into a forklift or machine zone.</p></div>
       </div>
     </section>
 
     <section aria-labelledby="api-h">
-      <h2 id="api-h">Your software, three ways in</h2>
-      <div class="api">
-        <ul>
-          <li><b>MQTT</b><span>For backends that already speak it, or several services reading the same stream.</span></li>
-          <li><b>WebSocket</b><span>JSON straight into a browser page or a light client.</span></li>
-          <li><b>REST</b><span>The room, its zones, the latest state, sessions and their reports.</span></li>
-        </ul>
-        <pre aria-label="An example location message"><span class="c">// zloc/v1/my-site/tag/7a90000000000001/location</span>
-{
-  "id": "7a90000000000001",
-  "ts": 1790543510.386,
-  "pos": { "x": 4.18, "y": 2.03, "z": 1.20 },
-  "speed": 1.4,
-  "still": false
-}</pre>
-      </div>
+      <h2 id="api-h">Works with your software</h2>
+      <p class="plain">Positions, events and reports arrive through standard interfaces — MQTT, WebSocket and a REST API — so
+        your team builds on them with the tools it already uses. Everything is computed and kept on your site; no cloud
+        account is needed.</p>
     </section>
 
     <section aria-labelledby="c-h">
